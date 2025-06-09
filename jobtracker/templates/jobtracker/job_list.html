@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Job Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Job Applications</h1>
-    <a href="{% url 'job_create' %}">Add New Job</a>
-    <ul>
+<body class="container py-5">
+    <h1 class="mb-4">Job Applications</h1>
+    <a href="{% url 'job_create' %}" class="btn btn-primary mb-4">Add New Job</a>
+    <ul class="list-group">
         {% for job in jobs %}
-            <li>{{ job.position }} at {{ job.company }} ({{ job.get_status_display }}) - Applied on {{ job.applied_date }}</li>
+            <li class="list-group-item">
+                <strong>{{ job.position }}</strong> at <strong>{{ job.company }}</strong>
+                <span class="badge bg-secondary">{{ job.get_status_display }}</span>
+                <div>Applied on {{ job.applied_date }}</div>
+            </li>
         {% empty %}
-            <li>No job applications yet.</li>
+            <li class="list-group-item">No job applications yet.</li>
         {% endfor %}
     </ul>
 </body>

@@ -12,6 +12,8 @@ class JobApplication(models.Model):
     position = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='applied')
     applied_date = models.DateField()
+    notes = models.TextField(blank=True, null=True)  # New field
+    resume = models.FileField(upload_to='resumes/', blank=True, null=True)  # New field
 
     def __str__(self):
         return f"{self.position} at {self.company}"
