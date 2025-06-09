@@ -1,8 +1,10 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.contrib import messages
 from .forms import RegisterForm, JobApplicationForm
 from .models import JobApplication
 
@@ -34,8 +36,29 @@ def logout_view(request):
 
 @login_required
 def job_list(request):
+    status_filter = request.GET.get('status')
+    sort_order = request.GET.get('sort', 'desc')  # default is newest first
+    page = request.GET.get('page', 1)
+
     jobs = JobApplication.objects.all()
-    return render(request, 'jobtracker/job_list.html', {'jobs': jobs})
+
+    if status_filter:
+        jobs = jobs.filter(status=status_filter)
+
+    if sort_order == 'asc':
+        jobs = jobs.order_by('applied_date')
+    else:
+        jobs = jobs.order_by('-applied_date')
+
+    paginator = Paginator(jobs, 10)
+    page_obj = paginator.get_page(page)
+
+    return render(request, 'jobtracker/job_list.html', {
+        'jobs': page_obj,
+        'status_filter': status_filter,
+        'sort_order': sort_order,
+        'page_obj': page_obj,
+    })
 
 @login_required
 def job_create(request):
@@ -43,6 +66,7 @@ def job_create(request):
         form = JobApplicationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
+            messages.success(request, "Job added successfully.")
             return redirect('job_list')
     else:
         form = JobApplicationForm()
@@ -55,6 +79,7 @@ def job_update(request, pk):
         form = JobApplicationForm(request.POST, request.FILES, instance=job)
         if form.is_valid():
             form.save()
+            messages.success(request, "Job updated successfully.")
             return redirect('job_list')
     else:
         form = JobApplicationForm(instance=job)
@@ -65,6 +90,7 @@ def job_delete(request, pk):
     job = get_object_or_404(JobApplication, pk=pk)
     if request.method == 'POST':
         job.delete()
+        messages.success(request, "Job deleted.")
         return redirect('job_list')
     return render(request, 'jobtracker/job_confirm_delete.html', {'job': job})
 

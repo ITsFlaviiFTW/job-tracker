@@ -4,10 +4,47 @@
 
 {% block content %}
 <h1>Job Applications</h1>
+
+<!-- Filter + Sort Form -->
+<form method="get" class="mb-4">
+    <div class="row">
+        <div class="col-auto">
+            <label for="status" class="form-label">Filter by Status</label>
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All</option>
+                <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+                <option value="interview" {% if status_filter == 'interview' %}selected{% endif %}>Interview</option>
+                <option value="offer" {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+
+        <div class="col-auto align-self-end">
+            <!-- toggle sort on submit -->
+            <input type="hidden" name="sort" value="{% if sort_order == 'asc' %}desc{% else %}asc{% endif %}">
+            <button type="submit" class="btn btn-outline-light">
+                Sort by:
+                {% if sort_order == 'asc' %}
+                    Oldest
+                {% else %}
+                    Newest
+                {% endif %}
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Add Job Button -->
 <a href="{% url 'job_create' %}" class="btn btn-primary mb-4">Add New Job</a>
+
+<!-- Job List -->
 <ul class="list-group">
     {% for job in jobs %}
-        <li class="list-group-item bg-dark text-light">
+        <li class="list-group-item bg-dark text-light border-start border-4 
+            {% if job.status == 'interview' %}border-warning
+            {% elif job.status == 'offer' %}border-success
+            {% elif job.status == 'rejected' %}border-danger
+            {% else %}border-secondary{% endif %}">
             <strong>{{ job.position }}</strong> at <strong>{{ job.company }}</strong>
             <span class="badge bg-secondary">{{ job.get_status_display }}</span>
             <div>Applied on {{ job.applied_date }}</div>
@@ -15,10 +52,37 @@
                 <a href="{% url 'job_update' job.pk %}" class="btn btn-sm btn-secondary">Edit</a>
                 <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
             </div>
-
         </li>
     {% empty %}
         <li class="list-group-item bg-dark text-light">No job applications yet.</li>
     {% endfor %}
 </ul>
+
+<!-- pagination -->
+<nav aria-label="Job pagination" class="mt-4">
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Previous</span></li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+      </li>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Next</span></li>
+    {% endif %}
+  </ul>
+</nav>
+
 {% endblock %}
