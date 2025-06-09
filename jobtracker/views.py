@@ -59,3 +59,12 @@ def job_update(request, pk):
     else:
         form = JobApplicationForm(instance=job)
     return render(request, 'jobtracker/job_form.html', {'form': form})
+
+@login_required
+def job_delete(request, pk):
+    job = get_object_or_404(JobApplication, pk=pk)
+    if request.method == 'POST':
+        job.delete()
+        return redirect('job_list')
+    return render(request, 'jobtracker/job_confirm_delete.html', {'job': job})
+

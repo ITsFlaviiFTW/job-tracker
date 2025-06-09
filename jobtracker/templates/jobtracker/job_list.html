@@ -13,7 +13,9 @@
             <div>Applied on {{ job.applied_date }}</div>
             <div class="mt-2">
                 <a href="{% url 'job_update' job.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
             </div>
+
         </li>
     {% empty %}
         <li class="list-group-item bg-dark text-light">No job applications yet.</li>
