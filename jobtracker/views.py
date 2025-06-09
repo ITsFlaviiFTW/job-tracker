@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
+from django.shortcuts import render
 from .forms import RegisterForm, JobApplicationForm
 from .models import JobApplication
 
@@ -44,4 +46,16 @@ def job_create(request):
             return redirect('job_list')
     else:
         form = JobApplicationForm()
+    return render(request, 'jobtracker/job_form.html', {'form': form})
+
+@login_required
+def job_update(request, pk):
+    job = get_object_or_404(JobApplication, pk=pk)
+    if request.method == 'POST':
+        form = JobApplicationForm(request.POST, request.FILES, instance=job)
+        if form.is_valid():
+            form.save()
+            return redirect('job_list')
+    else:
+        form = JobApplicationForm(instance=job)
     return render(request, 'jobtracker/job_form.html', {'form': form})
