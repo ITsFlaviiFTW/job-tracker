@@ -2,36 +2,82 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1>Dashboard</h1>
+<div class="container">
+  <h1 class="mb-4">📊 Dashboard</h1>
 
-<div class="mb-4">
-  <p><strong>Total Jobs:</strong> {{ total_jobs }}</p>
-  <p><strong>Offers:</strong> {{ total_offers }}</p>
-  <p><strong>Rejections:</strong> {{ total_rejected }}</p>
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card bg-dark border-secondary text-white">
+        <div class="card-body">
+          <h5 class="card-title">Total Jobs</h5>
+          <p class="card-text display-6">{{ total_jobs }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-dark border-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Offers</h5>
+          <p class="card-text display-6">{{ total_offers }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-dark border-danger text-white">
+        <div class="card-body">
+          <h5 class="card-title">Rejections</h5>
+          <p class="card-text display-6">{{ total_rejected }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-dark text-white">
+    <div class="card-body">
+      <h5 class="card-title">Jobs by Status</h5>
+      <canvas id="statusChart" height="120"></canvas>
+    </div>
+  </div>
 </div>
 
-<canvas id="statusChart" width="400" height="200"></canvas>
-
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   const ctx = document.getElementById('statusChart').getContext('2d');
-  const chart = new Chart(ctx, {
+  new Chart(ctx, {
     type: 'bar',
     data: {
       labels: {{ labels|safe }},
       datasets: [{
         label: 'Jobs by Status',
         data: {{ data|safe }},
-        backgroundColor: 'rgba(0, 123, 255, 0.5)',
-        borderColor: 'rgba(0, 123, 255, 1)',
+        backgroundColor: [
+          '#0d6efd',  // Applied
+          '#ffc107',  // Interview
+          '#198754',  // Offer
+          '#dc3545'   // Rejected
+        ],
+        borderColor: '#ffffff',
         borderWidth: 1
       }]
     },
     options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
       scales: {
-        y: { beginAtZero: true }
+        x: {
+          ticks: { color: 'white' },
+          grid: { color: '#444' }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: 'white', precision: 0 },
+          grid: { color: '#444' }
+        }
       }
     }
   });
 </script>
-
 {% endblock %}
