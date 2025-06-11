@@ -5,8 +5,11 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.contrib import messages
+from django.db.models import Count
+from django.db.models import Q
 from .forms import RegisterForm, JobApplicationForm
 from .models import JobApplication
+
 
 def register(request):
     if request.method == 'POST':
@@ -34,16 +37,47 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+
+
+@login_required
+def dashboard(request):
+    job_counts = JobApplication.objects.values('status').annotate(total=Count('status'))
+    status_data = {status['status']: status['total'] for status in job_counts}
+
+    total_jobs = JobApplication.objects.count()
+    total_offers = status_data.get('offer', 0)
+    total_rejected = status_data.get('rejected', 0)
+
+    labels = list(status_data.keys())
+    data = list(status_data.values())
+
+    return render(request, 'jobtracker/dashboard.html', {
+        'labels': labels,
+        'data': data,
+        'total_jobs': total_jobs,
+        'total_offers': total_offers,
+        'total_rejected': total_rejected,
+    })
+
+
+
 @login_required
 def job_list(request):
     status_filter = request.GET.get('status')
-    sort_order = request.GET.get('sort', 'desc')  # default is newest first
+    sort_order = request.GET.get('sort', 'desc')
+    search_query = request.GET.get('search', '')
     page = request.GET.get('page', 1)
 
     jobs = JobApplication.objects.all()
 
     if status_filter:
         jobs = jobs.filter(status=status_filter)
+
+    if search_query:
+        jobs = jobs.filter(
+            Q(company__icontains=search_query) |
+            Q(position__icontains=search_query)
+        )
 
     if sort_order == 'asc':
         jobs = jobs.order_by('applied_date')
@@ -57,6 +91,7 @@ def job_list(request):
         'jobs': page_obj,
         'status_filter': status_filter,
         'sort_order': sort_order,
+        'search_query': search_query,
         'page_obj': page_obj,
     })
 
@@ -93,4 +128,5 @@ def job_delete(request, pk):
         messages.success(request, "Job deleted.")
         return redirect('job_list')
     return render(request, 'jobtracker/job_confirm_delete.html', {'job': job})
+
 
