@@ -31,6 +31,12 @@
                 {% endif %}
             </button>
         </div>
+        <div class="col-auto">
+    <label for="search" class="form-label">Search</label>
+    <input type="text" name="search" class="form-control"
+           placeholder="Search company or position"
+           value="{{ search_query }}">
+        </div>
     </div>
 </form>
 
@@ -63,7 +69,7 @@
   <ul class="pagination">
     {% if page_obj.has_previous %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
       </li>
     {% else %}
       <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -71,13 +77,13 @@
 
     {% for num in page_obj.paginator.page_range %}
       <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-        <a class="page-link" href="?page={{ num }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+        <a class="page-link" href="?page={{ num }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
       </li>
     {% endfor %}
 
     {% if page_obj.has_next %}
       <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
       </li>
     {% else %}
       <li class="page-item disabled"><span class="page-link">Next</span></li>
