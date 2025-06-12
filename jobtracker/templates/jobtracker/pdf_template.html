@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; }
+    h2 { text-align: center; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 4px;
+      font-size: 12px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-all;
+      white-space: normal;
+      vertical-align: top;
+    }
+
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h2>Job Applications</h2>
+  <table>
+    <colgroup>
+      <col style="width:15%">
+      <col style="width:20%">
+      <col style="width:10%">
+      <col style="width:12%">
+      <col style="width:20%">
+      <col style="width:23%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Position</th>
+        <th>Status</th>
+        <th>Applied Date</th>
+        <th>Notes</th>
+        <th>Resume URL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td>{{ job.company }}</td>
+        <td>{{ job.position }}</td>
+        <td>{{ job.get_status_display }}</td>
+        <td>{{ job.applied_date|date:"Y-m-d" }}</td>
+        <td>{{ job.notes|default:"" }}</td>
+        <td>
+          {% if job.resume %}
+            {{ domain }}{{ job.resume.url }}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
