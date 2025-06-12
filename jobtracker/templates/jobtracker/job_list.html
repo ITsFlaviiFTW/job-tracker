@@ -36,6 +36,16 @@
 
 <a href="{% url 'job_create' %}" class="btn btn-primary mb-4">Add New Job</a>
 
+<div class="mb-4">
+  <a href="{% url 'export_csv' %}" class="btn btn-outline-light me-2">
+    Export CSV
+  </a>
+  <a href="{% url 'export_pdf' %}" class="btn btn-outline-light">
+    Export PDF
+  </a>
+</div>
+
+
 <!-- Job List -->
 <ul class="list-group">
   {% for job in jobs %}
