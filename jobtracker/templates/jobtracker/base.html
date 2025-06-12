@@ -45,17 +45,21 @@
     </div>
 </body>
 </html>
+
+
 <script>
-  // Auto-dismiss alerts after 3 seconds
   document.addEventListener('DOMContentLoaded', function () {
-    const alerts = document.querySelectorAll('.alert');
+    // only target flash alerts (they have alert-dismissible)
+    const alerts = document.querySelectorAll('.alert-dismissible');
     alerts.forEach(alert => {
       setTimeout(() => {
         alert.classList.remove('show');
         alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 150);  // remove from DOM
-      }, 3000);  // 3 seconds
+        setTimeout(() => alert.remove(), 150);
+      }, 3000);
     });
   });
 </script>
+
+
 
