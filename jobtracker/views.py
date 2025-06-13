@@ -47,21 +47,27 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    job_counts = JobApplication.objects.values('status').annotate(total=Count('status'))
-    status_data = {status['status']: status['total'] for status in job_counts}
+    # only this user’s jobs
+    qs = JobApplication.objects.filter(user=request.user)
 
-    total_jobs = JobApplication.objects.count()
-    total_offers = status_data.get('offer', 0)
+    # count per status
+    job_counts = qs.values('status').annotate(total=Count('status'))
+    status_data = {item['status']: item['total'] for item in job_counts}
+
+    # overall totals
+    total_jobs     = qs.count()
+    total_offers   = status_data.get('offer', 0)
     total_rejected = status_data.get('rejected', 0)
 
+    # chart data
     labels = list(status_data.keys())
-    data = list(status_data.values())
+    data   = list(status_data.values())
 
     return render(request, 'jobtracker/dashboard.html', {
-        'labels': labels,
-        'data': data,
-        'total_jobs': total_jobs,
-        'total_offers': total_offers,
+        'labels':         labels,
+        'data':           data,
+        'total_jobs':     total_jobs,
+        'total_offers':   total_offers,
         'total_rejected': total_rejected,
     })
 
