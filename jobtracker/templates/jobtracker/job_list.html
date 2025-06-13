@@ -1,5 +1,4 @@
 {% extends 'jobtracker/base.html' %}
-
 {% block title %}Job Applications{% endblock %}
 
 {% block content %}
@@ -21,8 +20,7 @@
     <div class="col-auto align-self-end">
       <input type="hidden" name="sort" value="{% if sort_order == 'asc' %}desc{% else %}asc{% endif %}">
       <button type="submit" class="btn btn-outline-light">
-        Sort by:
-        {% if sort_order == 'asc' %}Oldest{% else %}Newest{% endif %}
+        Sort by: {% if sort_order == 'asc' %}Oldest{% else %}Newest{% endif %}
       </button>
     </div>
     <div class="col-auto">
@@ -34,20 +32,40 @@
   </div>
 </form>
 
-<a href="{% url 'job_create' %}" class="btn btn-primary mb-4">Add New Job</a>
-
+<!-- Export Buttons -->
 <div class="mb-4">
-  <a href="{% url 'export_csv' %}" class="btn btn-outline-light me-2">
-    Export CSV
-  </a>
-  <a href="{% url 'export_pdf' %}" class="btn btn-outline-light">
-    Export PDF
-  </a>
+  <a href="{% url 'export_csv' %}" class="btn btn-outline-light me-2">Export CSV</a>
+  <a href="{% url 'export_pdf' %}" class="btn btn-outline-light">Export PDF</a>
 </div>
 
+<!-- Add New Job → opens modal -->
+<button type="button" class="btn btn-primary mb-4"
+        data-bs-toggle="modal" data-bs-target="#jobModal">
+  Add New Job
+</button>
+
+<!-- Add Job Modal -->
+<div class="modal fade" id="jobModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Job</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="jobForm" action="{% url 'job_create' %}"
+              method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-primary">Save Job</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Job List -->
-<ul class="list-group">
+<ul class="list-group" id="jobList">
   {% for job in jobs %}
     <li class="list-group-item mb-3 bg-dark text-light border-start border-4
         {% if job.status == 'interview' %}border-warning
@@ -55,7 +73,6 @@
         {% elif job.status == 'rejected' %}border-danger
         {% else %}border-secondary{% endif %}">
 
-      <!-- Top row: title + View Note/Resume -->
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <strong>{{ job.position }}</strong> at <strong>{{ job.company }}</strong>
@@ -65,26 +82,20 @@
         <div class="text-end">
           {% if job.notes %}
             <button class="btn btn-sm btn-warning mb-1"
-                    onclick="toggleNote({{ job.id }})">
-              View Note
-            </button>
+                    onclick="toggleNote({{ job.id }})">View Note</button>
           {% endif %}
           {% if job.resume %}
             <a href="{{ job.resume.url }}" target="_blank"
-               class="btn btn-sm btn-info mb-1">
-              View Resume
-            </a>
+               class="btn btn-sm btn-info mb-1">View Resume</a>
           {% endif %}
         </div>
       </div>
 
-      <!-- Edit/Delete row -->
       <div class="mt-2">
         <a href="{% url 'job_update' job.pk %}" class="btn btn-sm btn-secondary">Edit</a>
         <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
       </div>
 
-      <!-- Collapsible Note -->
       {% if job.notes %}
         <div id="note-{{ job.id }}" class="alert alert-warning mt-2 d-none">
           <div class="d-flex justify-content-between">
@@ -95,7 +106,6 @@
           <p class="mb-0">{{ job.notes }}</p>
         </div>
       {% endif %}
-
     </li>
   {% empty %}
     <li class="list-group-item bg-dark text-light">No job applications yet.</li>
@@ -144,11 +154,80 @@
   </ul>
 </nav>
 
-<!-- Toggle script INSIDE block content -->
+<!-- Note Toggle Script -->
 <script>
   function toggleNote(id) {
-    const el = document.getElementById(`note-${id}`);
-    el.classList.toggle('d-none');
+    document.getElementById(`note-${id}`).classList.toggle('d-none');
   }
+</script>
+
+<!-- AJAX Add Job Script -->
+<script>
+document.getElementById('jobForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: data
+  })
+  .then(r => r.json())
+  .then(job => {
+    const borderMap = {
+      applied: 'border-secondary',
+      interview: 'border-warning',
+      offer: 'border-success',
+      rejected: 'border-danger'
+    };
+    const borderClass = borderMap[job.status_key] || 'border-secondary';
+
+    const li = document.createElement('li');
+    li.className = `list-group-item mb-3 bg-dark text-light border-start border-4 ${borderClass}`;
+    li.innerHTML = `
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong>${job.position}</strong> at <strong>${job.company}</strong>
+          <span class="badge bg-secondary">${job.status}</span>
+          <div>Applied on ${job.applied_date}</div>
+        </div>
+        <div class="text-end">
+          ${job.notes
+            ? `<button class="btn btn-sm btn-warning mb-1"
+                       onclick="toggleNote(${job.id})">View Note</button>`
+            : ''
+          }
+          ${job.resume_url
+            ? `<a href="${job.resume_url}" target="_blank"
+                  class="btn btn-sm btn-info mb-1">View Resume</a>`
+            : ''
+          }
+        </div>
+      </div>
+      <div class="mt-2">
+      `<a href="${UPDATE_URL.replace('0', job.id)}" class="btn btn-sm btn-secondary">Edit</a>`
+      +`<a href="${DELETE_URL.replace('0', job.id)}" class="btn btn-sm btn-danger">Delete</a>`
+
+      </div>
+      ${job.notes ? `
+        <div id="note-${job.id}" class="alert alert-warning mt-2 d-none">
+          <div class="d-flex justify-content-between">
+            <strong>Note</strong>
+            <button class="btn-close btn-close-white btn-sm"
+                    onclick="toggleNote(${job.id})"></button>
+          </div>
+          <p class="mb-0">${job.notes}</p>
+        </div>
+      ` : ''}
+    `;
+    document.getElementById('jobList').prepend(li);
+    form.reset();
+    bootstrap.Modal.getInstance(
+      document.getElementById('jobModal')
+    ).hide();
+  })
+  .catch(console.error);
+});
 </script>
 {% endblock %}

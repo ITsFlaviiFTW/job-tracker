@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.template.loader import get_template
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -80,7 +81,7 @@ def job_list(request):
     search_query  = request.GET.get('search','')
     page_number   = request.GET.get('page',  1)
 
-    #  Only this user’s jobs
+    # 🔹 only this user’s jobs
     qs = JobApplication.objects.filter(user=request.user)
 
     if status_filter:
@@ -97,8 +98,12 @@ def job_list(request):
     paginator = Paginator(qs, 10)
     page_obj  = paginator.get_page(page_number)
 
+    # 🔹 pass an empty form into the template
+    form = JobApplicationForm()
+
     return render(request, 'jobtracker/job_list.html', {
         'jobs':          page_obj,
+        'form':          form,              # 🔹
         'status_filter': status_filter,
         'sort_order':    sort_order,
         'search_query':  search_query,
@@ -111,8 +116,22 @@ def job_create(request):
         form = JobApplicationForm(request.POST, request.FILES)
         if form.is_valid():
             job = form.save(commit=False)
-            job.user = request.user     # 🚩 assign owner
+            job.user = request.user     # assigns owner
             job.save()
+
+             # AJAX response
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'id'           : job.pk,
+                    'company'      : job.company,
+                    'position'     : job.position,
+                    'status'       : job.get_status_display(),
+                    'status_key'   : job.status,
+                    'applied_date' : job.applied_date.strftime('%B %-d, %Y'),
+                    'notes'        : job.notes or '',
+                    'resume_url'   : job.resume.url if job.resume else '',
+                })
+            # normal fallback
             messages.success(request, "Job added successfully.")
             return redirect('job_list')
     else:
