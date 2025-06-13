@@ -70,35 +70,33 @@ def dashboard(request):
 @login_required
 def job_list(request):
     status_filter = request.GET.get('status')
-    sort_order = request.GET.get('sort', 'desc')
-    search_query = request.GET.get('search', '')
-    page = request.GET.get('page', 1)
+    sort_order    = request.GET.get('sort',  'desc')
+    search_query  = request.GET.get('search','')
+    page_number   = request.GET.get('page',  1)
 
-    jobs = JobApplication.objects.all()
+    #  Only this user’s jobs
+    qs = JobApplication.objects.filter(user=request.user)
 
     if status_filter:
-        jobs = jobs.filter(status=status_filter)
+        qs = qs.filter(status=status_filter)
 
     if search_query:
-        jobs = jobs.filter(
+        qs = qs.filter(
             Q(company__icontains=search_query) |
             Q(position__icontains=search_query)
         )
 
-    if sort_order == 'asc':
-        jobs = jobs.order_by('applied_date')
-    else:
-        jobs = jobs.order_by('-applied_date')
+    qs = qs.order_by('applied_date' if sort_order=='asc' else '-applied_date')
 
-    paginator = Paginator(jobs, 10)
-    page_obj = paginator.get_page(page)
+    paginator = Paginator(qs, 10)
+    page_obj  = paginator.get_page(page_number)
 
     return render(request, 'jobtracker/job_list.html', {
-        'jobs': page_obj,
+        'jobs':          page_obj,
         'status_filter': status_filter,
-        'sort_order': sort_order,
-        'search_query': search_query,
-        'page_obj': page_obj,
+        'sort_order':    sort_order,
+        'search_query':  search_query,
+        'page_obj':      page_obj,
     })
 
 @login_required
@@ -106,7 +104,9 @@ def job_create(request):
     if request.method == 'POST':
         form = JobApplicationForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            job = form.save(commit=False)
+            job.user = request.user     # 🚩 assign owner
+            job.save()
             messages.success(request, "Job added successfully.")
             return redirect('job_list')
     else:
@@ -115,7 +115,9 @@ def job_create(request):
 
 @login_required
 def job_update(request, pk):
-    job = get_object_or_404(JobApplication, pk=pk)
+    #  only allow editing your own
+    job = get_object_or_404(JobApplication, pk=pk, user=request.user)
+
     if request.method == 'POST':
         form = JobApplicationForm(request.POST, request.FILES, instance=job)
         if form.is_valid():
@@ -124,16 +126,22 @@ def job_update(request, pk):
             return redirect('job_list')
     else:
         form = JobApplicationForm(instance=job)
+
     return render(request, 'jobtracker/job_form.html', {'form': form})
 
 @login_required
 def job_delete(request, pk):
-    job = get_object_or_404(JobApplication, pk=pk)
+    # 🚩 only allow deleting your own
+    job = get_object_or_404(JobApplication, pk=pk, user=request.user)
+
     if request.method == 'POST':
         job.delete()
         messages.success(request, "Job deleted.")
         return redirect('job_list')
+
     return render(request, 'jobtracker/job_confirm_delete.html', {'job': job})
+
+
 
 
 
