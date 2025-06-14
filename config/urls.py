@@ -50,6 +50,7 @@ urlpatterns = [
 
 
     path('explore-jobs/', views.explore_jobs, name='explore_jobs'),
+    path('save-remote-job/', views.save_remote_job, name='save_remote_job'),
 ]
 
 if settings.DEBUG:
