@@ -261,6 +261,16 @@ def explore_jobs(request):
     except Exception as e:
         print("[ERROR]", e)
 
+    #Filtering
+    search = request.GET.get("search", "").lower()
+    location = request.GET.get("location", "").lower()
+
+    if search:
+        jobs = [job for job in jobs if search in job["title"].lower() or search in job["company_name"].lower()]
+    if location:
+        jobs = [job for job in jobs if location in job["candidate_required_location"].lower()]
+
+
     # Pagination
     paginator = Paginator(jobs, 10)  # Show 10 jobs per page
     page_number = request.GET.get("page", 1)

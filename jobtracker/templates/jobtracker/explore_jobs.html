@@ -4,6 +4,18 @@
 {% block content %}
 <h1>Explore Remote Jobs</h1>
 
+<form class="row g-2 mb-4" method="get">
+  <div class="col-md-4">
+    <input type="text" name="search" class="form-control" placeholder="Search title or company" value="{{ request.GET.search }}">
+  </div>
+  <div class="col-md-3">
+    <input type="text" name="location" class="form-control" placeholder="Location" value="{{ request.GET.location }}">
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-primary">Filter</button>
+  </div>
+</form>
+
 <div id="jobFeed" class="row g-3">
   {% for job in jobs %}
     <div class="col-12 col-md-6 col-lg-4">
