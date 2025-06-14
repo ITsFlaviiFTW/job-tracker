@@ -48,6 +48,8 @@ urlpatterns = [
     path('job/<int:pk>/detail-json/',views.job_detail_json,  name='job_detail_json'),
     path('job/<int:pk>/update-ajax/',views.job_update_ajax,  name='job_update_ajax'),
 
+
+    path('explore-jobs/', views.explore_jobs, name='explore_jobs'),
 ]
 
 if settings.DEBUG:
