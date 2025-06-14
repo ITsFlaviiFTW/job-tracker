@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.template.loader import get_template
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -15,6 +16,7 @@ from django.db.models import Q
 from .forms import RegisterForm, JobApplicationForm
 from .models import JobApplication
 from xhtml2pdf import pisa
+from datetime import date
 import csv
 import requests
 
@@ -191,16 +193,19 @@ def job_detail_json(request, pk):
 def job_update_ajax(request, pk):
     job = get_object_or_404(JobApplication, pk=pk, user=request.user)
     form = JobApplicationForm(request.POST, request.FILES, instance=job)
+
     if not form.is_valid():
         return JsonResponse({'errors': form.errors}, status=400)
+
     job = form.save()
+
     return JsonResponse({
         'id'           : job.pk,
         'company'      : job.company,
         'position'     : job.position,
         'status_key'   : job.status,
         'status'       : job.get_status_display(),
-        'applied_date' : job.applied_date.strftime('%B %-d, %Y'),
+        'applied_date' : job.applied_date.strftime('%B %d, %Y'),  # ✅ Fixed format
         'notes'        : job.notes or '',
         'resume_url'   : job.resume.url if job.resume else '',
     })
@@ -271,8 +276,8 @@ def explore_jobs(request):
         jobs = [job for job in jobs if location in job["candidate_required_location"].lower()]
 
 
-    # Pagination
-    paginator = Paginator(jobs, 10)  # Show 10 jobs per page
+    # Pagination for API searcher
+    paginator = Paginator(jobs, 12)  # Show 10 jobs per page
     page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
@@ -281,5 +286,22 @@ def explore_jobs(request):
         "jobs": page_obj.object_list,
     })
 
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def save_remote_job(request):
+    title   = request.POST.get("title")
+    company = request.POST.get("company")
+    job = JobApplication.objects.create(
+        user=request.user,
+        position=title,
+        company=company,
+        applied_date=date.today(),
+        status="Applied"  # or any default status you prefer
+    )
+    return JsonResponse({"status": "saved", "id": job.id})
 
 
