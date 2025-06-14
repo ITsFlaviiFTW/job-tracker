@@ -16,6 +16,7 @@ from .forms import RegisterForm, JobApplicationForm
 from .models import JobApplication
 from xhtml2pdf import pisa
 import csv
+import requests
 
 
 
@@ -247,4 +248,21 @@ def export_pdf(request):
     if pisa_status.err:
         return HttpResponse('Error generating PDF', status=500)
     return response
+
+
+# Jobs API searcher
+@login_required
+def explore_jobs(request):
+    jobs = []
+    try:
+        response = requests.get("https://remotive.com/api/remote-jobs?category=software-dev", timeout=5)
+        response.raise_for_status()
+        jobs = response.json().get("jobs", [])
+    except requests.RequestException as e:
+        print(f"[ERROR] API request failed: {e}")
+    except ValueError:
+        print("[ERROR] Failed to decode JSON response.")
+    
+    return render(request, "jobtracker/explore_jobs.html", {"jobs": jobs})
+
 

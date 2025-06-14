@@ -1,0 +1,38 @@
+{% extends 'jobtracker/base.html' %}
+{% block title %}Explore Remote Jobs{% endblock %}
+
+{% block content %}
+<h1>Explore Remote Jobs</h1>
+
+<div id="jobFeed" class="row g-3">
+  {% for job in jobs %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{ job.title }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">{{ job.company_name }}</h6>
+          <p class="card-text">{{ job.candidate_required_location }}</p>
+          <a href="{{ job.url }}" target="_blank" class="card-link">View on Remotive</a>
+          <button class="btn btn-sm btn-primary save-btn mt-2"
+                  data-title="{{ job.title }}"
+                  data-company="{{ job.company_name }}">
+            Save to Tracker
+          </button>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const title   = btn.dataset.title;
+      const company = btn.dataset.company;
+      document.getElementById('jobModal').querySelector('[name=position]').value = title;
+      document.getElementById('jobModal').querySelector('[name=company]').value  = company;
+      new bootstrap.Modal(document.getElementById('jobModal')).show();
+    });
+  });
+</script>
+{% endblock %}
