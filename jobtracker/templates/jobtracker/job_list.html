@@ -64,6 +64,30 @@
   </div>
 </div>
 
+
+
+ <!-- Edit Job Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Job</h5>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm" enctype="multipart/form-data">
+          {% csrf_token %}
+          <!-- we’ll inject fields here via JS -->
+          <div id="editFields"></div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Job List -->
 <ul class="list-group" id="jobList">
   {% for job in jobs %}
@@ -92,7 +116,12 @@
       </div>
 
       <div class="mt-2">
-        <a href="{% url 'job_update' job.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                <!-- AJAX‐edit button: -->
+        <button
+          class="btn btn-sm btn-secondary edit-btn"
+          data-id="{{ job.id }}">
+          Edit
+        </button>
         <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
       </div>
 
@@ -230,4 +259,79 @@ document.getElementById('jobForm').addEventListener('submit', function(e) {
   .catch(console.error);
 });
 </script>
+
+
+
+<script>
+// Helper to build an <input> or <select> or <textarea> from Django form attrs
+function makeField(html) {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  return wrapper.firstElementChild;
+}
+
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.dataset.id;
+    fetch(`/job/${id}/detail-json/`)
+      .then(r => r.json())
+      .then(job => {
+        // Build HTML for each field
+        const fields = `
+          <label>Company:</label>
+          <input name="company" class="form-control" value="${job.company}">
+          <label>Position:</label>
+          <input name="position" class="form-control" value="${job.position}">
+          <label>Status:</label>
+          <select name="status" class="form-select">
+            <option value="applied" ${job.status_key=='applied'?'selected':''}>Applied</option>
+            <option value="interview" ${job.status_key=='interview'?'selected':''}>Interview</option>
+            <option value="offer" ${job.status_key=='offer'?'selected':''}>Offer</option>
+            <option value="rejected" ${job.status_key=='rejected'?'selected':''}>Rejected</option>
+          </select>
+          <label>Applied date:</label>
+          <input type="date" name="applied_date" class="form-control" value="${job.applied_date}">
+          <label>Notes:</label>
+          <textarea name="notes" class="form-control">${job.notes}</textarea>
+          <label>Resume:</label>
+          <input type="file" name="resume" class="form-control">
+        `;
+        const container = document.getElementById('editFields');
+        container.innerHTML = fields;
+
+        // set form action
+        const form = document.getElementById('editForm');
+        form.action = `/job/${id}/update-ajax/`;
+
+        // show modal
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+      });
+  });
+});
+
+document.getElementById('editForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: data
+  })
+  .then(r => {
+    if (!r.ok) throw r;
+    return r.json();
+  })
+  .then(job => {
+    // find existing <li> and update its innerHTML (similar to Add)
+    const li = document.querySelector(`.edit-btn[data-id="${job.id}"]`).closest('li');
+    li.querySelector('strong').innerText = `${job.position}`; // etc.
+    // ...update company, status badge, date, notes block, resume link...
+    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+  })
+  .catch(err => console.error('Update failed', err));
+});
+</script>
+
 {% endblock %}

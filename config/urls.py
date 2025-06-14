@@ -20,6 +20,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from jobtracker import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -42,6 +43,11 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(
            template_name='jobtracker/password_reset_complete.html'),
          name='password_reset_complete'),
+
+
+    path('job/<int:pk>/detail-json/',views.job_detail_json,  name='job_detail_json'),
+    path('job/<int:pk>/update-ajax/',views.job_update_ajax,  name='job_update_ajax'),
+
 ]
 
 if settings.DEBUG:
