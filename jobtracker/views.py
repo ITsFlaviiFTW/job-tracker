@@ -258,11 +258,18 @@ def explore_jobs(request):
         response = requests.get("https://remotive.com/api/remote-jobs?category=software-dev", timeout=5)
         response.raise_for_status()
         jobs = response.json().get("jobs", [])
-    except requests.RequestException as e:
-        print(f"[ERROR] API request failed: {e}")
-    except ValueError:
-        print("[ERROR] Failed to decode JSON response.")
-    
-    return render(request, "jobtracker/explore_jobs.html", {"jobs": jobs})
+    except Exception as e:
+        print("[ERROR]", e)
+
+    # Pagination
+    paginator = Paginator(jobs, 10)  # Show 10 jobs per page
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "jobtracker/explore_jobs.html", {
+        "page_obj": page_obj,
+        "jobs": page_obj.object_list,
+    })
+
 
 
