@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.template.loader import get_template
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -156,7 +157,7 @@ def job_update(request, pk):
 
 @login_required
 def job_delete(request, pk):
-    # 🚩 only allow deleting your own
+    # only allow deleting your own
     job = get_object_or_404(JobApplication, pk=pk, user=request.user)
 
     if request.method == 'POST':
@@ -167,6 +168,41 @@ def job_delete(request, pk):
     return render(request, 'jobtracker/job_confirm_delete.html', {'job': job})
 
 
+
+# AJAX EDITING
+@login_required
+@require_http_methods(["GET"])
+def job_detail_json(request, pk):
+    job = get_object_or_404(JobApplication, pk=pk, user=request.user)
+    return JsonResponse({
+        'id'           : job.pk,
+        'company'      : job.company,
+        'position'     : job.position,
+        'status_key'   : job.status,
+        'status'       : job.get_status_display(),
+        'applied_date' : job.applied_date.strftime('%Y-%m-%d'),
+        'notes'        : job.notes or '',
+        'resume_url'   : job.resume.url if job.resume else '',
+    })
+
+@login_required
+@require_http_methods(["POST"])
+def job_update_ajax(request, pk):
+    job = get_object_or_404(JobApplication, pk=pk, user=request.user)
+    form = JobApplicationForm(request.POST, request.FILES, instance=job)
+    if not form.is_valid():
+        return JsonResponse({'errors': form.errors}, status=400)
+    job = form.save()
+    return JsonResponse({
+        'id'           : job.pk,
+        'company'      : job.company,
+        'position'     : job.position,
+        'status_key'   : job.status,
+        'status'       : job.get_status_display(),
+        'applied_date' : job.applied_date.strftime('%B %-d, %Y'),
+        'notes'        : job.notes or '',
+        'resume_url'   : job.resume.url if job.resume else '',
+    })
 
 
 
