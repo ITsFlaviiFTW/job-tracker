@@ -3,11 +3,11 @@
 {% block title %}Add Job Application{% endblock %}
 
 {% block content %}
-<h1>Add Job Application</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Save</button>
+<h1 class="text-2xl font-bold mb-4">Add Job Application</h1>
+<form method="post" enctype="multipart/form-data" class="space-y-4">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
 </form>
-<a href="{% url 'job_list' %}" class="btn btn-secondary mt-3">Back to List</a>
+<a href="{% url 'job_list' %}" class="inline-block mt-4 text-blue-400 hover:underline">Back to List</a>
 {% endblock %}

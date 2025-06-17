@@ -2,42 +2,26 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1 class="mb-4">📊 Dashboard</h1>
+<h1 class="text-3xl font-bold mb-6">📊 Dashboard</h1>
 
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card bg-dark border-secondary text-white">
-        <div class="card-body">
-          <h5 class="card-title">Total Jobs</h5>
-          <p class="card-text display-6">{{ total_jobs }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card bg-dark border-success text-white">
-        <div class="card-body">
-          <h5 class="card-title">Offers</h5>
-          <p class="card-text display-6">{{ total_offers }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card bg-dark border-danger text-white">
-        <div class="card-body">
-          <h5 class="card-title">Rejections</h5>
-          <p class="card-text display-6">{{ total_rejected }}</p>
-        </div>
-      </div>
-    </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  <div class="bg-gray-800 p-6 rounded-lg shadow">
+    <h2 class="text-sm uppercase text-gray-400">Total Jobs</h2>
+    <p class="text-2xl font-semibold">{{ total_jobs }}</p>
   </div>
+  <div class="bg-gray-800 p-6 rounded-lg shadow border border-green-500">
+    <h2 class="text-sm uppercase text-green-400">Offers</h2>
+    <p class="text-2xl font-semibold">{{ total_offers }}</p>
+  </div>
+  <div class="bg-gray-800 p-6 rounded-lg shadow border border-red-500">
+    <h2 class="text-sm uppercase text-red-400">Rejections</h2>
+    <p class="text-2xl font-semibold">{{ total_rejected }}</p>
+  </div>
+</div>
 
-  <div class="card bg-dark text-white">
-    <div class="card-body">
-      <h5 class="card-title">Jobs by Status</h5>
-      <canvas id="statusChart" height="120"></canvas>
-    </div>
-  </div>
+<div class="bg-gray-800 p-6 rounded-lg shadow">
+  <h2 class="text-lg font-semibold mb-4">Jobs by Status</h2>
+  <canvas id="statusChart" height="120"></canvas>
 </div>
 
 <!-- Chart.js -->

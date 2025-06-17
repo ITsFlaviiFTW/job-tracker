@@ -3,11 +3,12 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Register</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Register</button>
+<h1 class="text-2xl font-bold mb-6">Register</h1>
+<form method="post" class="space-y-4">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Register</button>
 </form>
-<a href="{% url 'login' %}" class="btn btn-link mt-3">Already have an account? Login</a>
+<a href="{% url 'login' %}" class="inline-block mt-4 text-sm text-blue-400 hover:underline">Already have an account? Login</a>
+
 {% endblock %}

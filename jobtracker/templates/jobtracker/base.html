@@ -1,69 +1,43 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+{% load static %}
+<html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Job Tracker{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>{% block title %}Job Tracker{% endblock %}</title>
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
 </head>
-<body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'job_list' %}">Job Tracker</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'explore_jobs' %}">Explore Jobs</a>
-                        </li>
-                        <li class="nav-item me-3">
-                            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Register</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-<div class="container mt-2">
+<body class="bg-gray-950 text-white min-h-screen">
+
+<!-- Navbar -->
+<nav class="bg-blue-600 text-white py-3 px-6 flex justify-between items-center shadow">
+  <a href="{% url 'job_list' %}" class="font-bold text-lg">Job Tracker</a>
+  <div class="space-x-4">
+    {% if user.is_authenticated %}
+      <a href="{% url 'explore_jobs' %}" class="hover:underline">Explore Jobs</a>
+      <a href="{% url 'dashboard' %}" class="hover:underline">Dashboard</a>
+      <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}" class="hover:underline">Login</a>
+      <a href="{% url 'register' %}" class="hover:underline">Register</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- Flash Messages -->
+<div class="max-w-7xl mx-auto mt-4 px-4">
   {% if messages %}
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      <div class="mb-4 p-4 rounded bg-gray-800 text-sm border border-{{ message.tags }}">
         {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     {% endfor %}
   {% endif %}
 </div>
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
 
-
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // only target flash alerts (they have alert-dismissible)
-    const alerts = document.querySelectorAll('.alert-dismissible');
-    alerts.forEach(alert => {
-      setTimeout(() => {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 150);
-      }, 3000);
-    });
-  });
-</script>
-
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Main content -->
+<main class="max-w-7xl mx-auto px-4 py-6">
+  {% block content %}{% endblock %}
+</main>
 
 </body>
 </html>

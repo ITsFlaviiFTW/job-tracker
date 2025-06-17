@@ -2,336 +2,253 @@
 {% block title %}Job Applications{% endblock %}
 
 {% block content %}
-<h1>Job Applications</h1>
+<h1 class="text-2xl font-bold mb-6">Job Applications</h1>
 
-<!-- Filter + Sort + Search Form -->
-<form method="get" class="mb-4">
-  <div class="row g-3">
-    <div class="col-auto">
-      <label for="status" class="form-label">Filter by Status</label>
-      <select name="status" class="form-select" onchange="this.form.submit()">
-        <option value="">All</option>
-        <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
-        <option value="interview" {% if status_filter == 'interview' %}selected{% endif %}>Interview</option>
-        <option value="offer" {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
-        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-      </select>
-    </div>
-    <div class="col-auto align-self-end">
-      <input type="hidden" name="sort" value="{% if sort_order == 'asc' %}desc{% else %}asc{% endif %}">
-      <button type="submit" class="btn btn-outline-light">
-        Sort by: {% if sort_order == 'asc' %}Oldest{% else %}Newest{% endif %}
-      </button>
-    </div>
-    <div class="col-auto">
-      <label for="search" class="form-label">Search</label>
-      <input type="text" name="search" class="form-control"
-             placeholder="Search company or position"
-             value="{{ search_query }}">
-    </div>
+<!-- Filters and Search -->
+<form method="get" class="grid md:grid-cols-3 gap-4 mb-6">
+  <div>
+    <label for="status" class="block text-sm mb-1">Filter by Status</label>
+    <select name="status" class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white" onchange="this.form.submit()">
+      <option value="">All</option>
+      <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+      <option value="interview" {% if status_filter == 'interview' %}selected{% endif %}>Interview</option>
+      <option value="offer" {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
+      <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="search" class="block text-sm mb-1">Search</label>
+    <input type="text" name="search" placeholder="Company or Position"
+           value="{{ search_query }}"
+           class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white">
+  </div>
+
+  <div class="flex items-end justify-between gap-2">
+    <input type="hidden" name="sort" value="{% if sort_order == 'asc' %}desc{% else %}asc{% endif %}">
+    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+      Sort by: {% if sort_order == 'asc' %}Oldest{% else %}Newest{% endif %}
+    </button>
   </div>
 </form>
 
-<!-- Export Buttons -->
-<div class="mb-4">
-  <a href="{% url 'export_csv' %}" class="btn btn-outline-light me-2">Export CSV</a>
-  <a href="{% url 'export_pdf' %}" class="btn btn-outline-light">Export PDF</a>
+<!-- Export -->
+<div class="mb-6 flex gap-2">
+  <a href="{% url 'export_csv' %}" class="px-4 py-2 border border-white text-white rounded hover:bg-gray-800">Export CSV</a>
+  <a href="{% url 'export_pdf' %}" class="px-4 py-2 border border-white text-white rounded hover:bg-gray-800">Export PDF</a>
 </div>
 
-<!-- Add New Job → opens modal -->
-<button type="button" class="btn btn-primary mb-4"
-        data-bs-toggle="modal" data-bs-target="#jobModal">
-  Add New Job
+
+<!-- Add Job Button -->
+<button id="openModalBtn" class="mb-6 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
+  + Add New Job
 </button>
 
-<!-- Add Job Modal -->
-<div class="modal fade" id="jobModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header">
-        <h5 class="modal-title">Add New Job</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="jobForm" action="{% url 'job_create' %}"
-              method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="btn btn-primary">Save Job</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
- <!-- Edit Job Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Job</h5>
-        <button type="button" class="btn-close btn-close-white"
-                data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editForm" enctype="multipart/form-data">
-          {% csrf_token %}
-          <!-- we’ll inject fields here via JS -->
-          <div id="editFields"></div>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 <!-- Job List -->
-<ul class="list-group" id="jobList">
+<ul id="jobList" class="space-y-4">
   {% for job in jobs %}
-    <li class="list-group-item mb-3 bg-dark text-light border-start border-4
-        {% if job.status == 'interview' %}border-warning
-        {% elif job.status == 'offer' %}border-success
-        {% elif job.status == 'rejected' %}border-danger
-        {% else %}border-secondary{% endif %}">
+    <li class="p-4 rounded-lg bg-gray-800 border-l-4
+      {% if job.status == 'interview' %}border-yellow-500
+      {% elif job.status == 'offer' %}border-green-500
+      {% elif job.status == 'rejected' %}border-red-500
+      {% else %}border-gray-500{% endif %}">
 
-      <div class="d-flex justify-content-between align-items-start">
+      <div class="flex justify-between items-start">
         <div>
-          <strong>{{ job.position }}</strong> at <strong>{{ job.company }}</strong>
-          <span class="badge bg-secondary">{{ job.get_status_display }}</span>
-          <div>Applied on {{ job.applied_date }}</div>
+          <h2 class="text-lg font-semibold">{{ job.position }}</h2>
+          <p class="text-sm text-gray-400">at {{ job.company }}</p>
+          <span class="inline-block mt-1 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded">{{ job.get_status_display }}</span>
+          <p class="text-xs text-gray-500 mt-1">Applied on {{ job.applied_date }}</p>
         </div>
-        <div class="text-end">
+        <div class="text-right space-y-1">
           {% if job.notes %}
-            <button class="btn btn-sm btn-warning mb-1"
-                    onclick="toggleNote({{ job.id }})">View Note</button>
+            <button class="text-yellow-400 underline text-sm" onclick="toggleNote({{ job.id }})">View Note</button><br>
           {% endif %}
           {% if job.resume %}
-            <a href="{{ job.resume.url }}" target="_blank"
-               class="btn btn-sm btn-info mb-1">View Resume</a>
+            <a href="{{ job.resume.url }}" target="_blank" class="text-blue-400 underline text-sm">View Resume</a>
           {% endif %}
         </div>
       </div>
 
-      <div class="mt-2">
-                <!-- AJAX‐edit button: -->
-        <button
-          class="btn btn-sm btn-secondary edit-btn"
-          data-id="{{ job.id }}">
-          Edit
-        </button>
-        <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
+      <div class="mt-4 flex gap-2">
+        <button class="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-sm edit-btn" data-id="{{ job.id }}">Edit</button>
+        <a href="{% url 'job_delete' job.pk %}" class="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-sm">Delete</a>
       </div>
 
       {% if job.notes %}
-        <div id="note-{{ job.id }}" class="alert alert-warning mt-2 d-none">
-          <div class="d-flex justify-content-between">
+        <div id="note-{{ job.id }}" class="mt-4 p-3 rounded bg-yellow-900 text-yellow-100 text-sm hidden">
+          <div class="flex justify-between mb-1">
             <strong>Note</strong>
-            <button class="btn-close btn-close-white btn-sm"
-                    onclick="toggleNote({{ job.id }})"></button>
+            <button class="text-yellow-300 text-xs" onclick="toggleNote({{ job.id }})">✖</button>
           </div>
-          <p class="mb-0">{{ job.notes }}</p>
+          <p>{{ job.notes }}</p>
         </div>
       {% endif %}
     </li>
   {% empty %}
-    <li class="list-group-item bg-dark text-light">No job applications yet.</li>
+    <li class="text-gray-400">No job applications yet.</li>
   {% endfor %}
 </ul>
 
+
+<!-- Add Job Modal -->
+<div id="jobModal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center hidden z-50">
+  <div class="bg-gray-900 p-6 rounded shadow w-full max-w-xl">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold text-white">Add New Job</h2>
+      <button id="closeModalBtn" class="text-white text-xl">&times;</button>
+    </div>
+    <div>
+      <label for="id_company" class="block text-sm text-white mb-1">Company</label>
+      <input type="text" name="company" id="id_company" class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600">
+    </div>
+
+    <div>
+      <label for="id_position" class="block text-sm text-white mb-1">Position</label>
+      <input type="text" name="position" id="id_position" class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600">
+    </div>
+
+    <div>
+      <label for="id_status" class="block text-sm text-white mb-1">Status</label>
+      <select name="status" id="id_status" class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600">
+        <option value="applied">Applied</option>
+        <option value="interview">Interview</option>
+        <option value="offer">Offer</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="id_applied_date" class="block text-sm text-white mb-1">Applied Date</label>
+      <input type="date" name="applied_date" id="id_applied_date" class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600">
+    </div>
+
+    <div>
+      <label for="id_notes" class="block text-sm text-white mb-1">Notes</label>
+      <textarea name="notes" id="id_notes" rows="4" class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"></textarea>
+    </div>
+
+    <div>
+      <label for="id_resume" class="block text-sm text-white mb-1">Resume</label>
+      <input type="file" name="resume" id="id_resume" class="text-white">
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Edit Job Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center hidden z-50">
+  <div class="bg-gray-900 p-6 rounded shadow w-full max-w-xl">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold text-white">Edit Job</h2>
+      <button id="closeEditBtn" class="text-white text-xl">&times;</button>
+    </div>
+    <form id="editForm" method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      <div id="editFields"></div>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+
 <!-- Pagination -->
-<nav aria-label="Job pagination" class="mt-4">
-  <ul class="pagination">
-    {% if page_obj.has_previous %}
-      <li class="page-item">
-        <a class="page-link"
-           href="?page={{ page_obj.previous_page_number }}&sort={{ sort_order }}
-                  {% if status_filter %}&status={{ status_filter }}{% endif %}
-                  {% if search_query %}&search={{ search_query }}{% endif %}">
-          Previous
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled"><span class="page-link">Previous</span></li>
-    {% endif %}
+<div class="mt-8 flex justify-center space-x-2">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">Previous</a>
+  {% endif %}
 
-    {% for num in page_obj.paginator.page_range %}
-      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-        <a class="page-link"
-           href="?page={{ num }}&sort={{ sort_order }}
-                  {% if status_filter %}&status={{ status_filter }}{% endif %}
-                  {% if search_query %}&search={{ search_query }}{% endif %}">
-          {{ num }}
-        </a>
-      </li>
-    {% endfor %}
+  <span class="px-3 py-1 text-white bg-gray-600 rounded">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+  </span>
 
-    {% if page_obj.has_next %}
-      <li class="page-item">
-        <a class="page-link"
-           href="?page={{ page_obj.next_page_number }}&sort={{ sort_order }}
-                  {% if status_filter %}&status={{ status_filter }}{% endif %}
-                  {% if search_query %}&search={{ search_query }}{% endif %}">
-          Next
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled"><span class="page-link">Next</span></li>
-    {% endif %}
-  </ul>
-</nav>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&sort={{ sort_order }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">Next</a>
+  {% endif %}
+</div>
 
-<!-- Note Toggle Script -->
+
+{% block scripts %}
 <script>
   function toggleNote(id) {
-    document.getElementById(`note-${id}`).classList.toggle('d-none');
+    document.getElementById(`note-${id}`).classList.toggle('hidden');
   }
 </script>
 
-<!-- AJAX Add Job Script -->
-<script>
-document.getElementById('jobForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const data = new FormData(form);
-
-  fetch(form.action, {
-    method: 'POST',
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    body: data
-  })
-  .then(r => r.json())
-  .then(job => {
-    const borderMap = {
-      applied: 'border-secondary',
-      interview: 'border-warning',
-      offer: 'border-success',
-      rejected: 'border-danger'
-    };
-    const borderClass = borderMap[job.status_key] || 'border-secondary';
-
-    const li = document.createElement('li');
-    li.className = `list-group-item mb-3 bg-dark text-light border-start border-4 ${borderClass}`;
-    li.innerHTML = `
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <strong>${job.position}</strong> at <strong>${job.company}</strong>
-          <span class="badge bg-secondary">${job.status}</span>
-          <div>Applied on ${job.applied_date}</div>
-        </div>
-        <div class="text-end">
-          ${job.notes
-            ? `<button class="btn btn-sm btn-warning mb-1"
-                       onclick="toggleNote(${job.id})">View Note</button>`
-            : ''
-          }
-          ${job.resume_url
-            ? `<a href="${job.resume_url}" target="_blank"
-                  class="btn btn-sm btn-info mb-1">View Resume</a>`
-            : ''
-          }
-        </div>
-      </div>
-      <div class="mt-2">
-      `<a href="${UPDATE_URL.replace('0', job.id)}" class="btn btn-sm btn-secondary">Edit</a>`
-      +`<a href="${DELETE_URL.replace('0', job.id)}" class="btn btn-sm btn-danger">Delete</a>`
-
-      </div>
-      ${job.notes ? `
-        <div id="note-${job.id}" class="alert alert-warning mt-2 d-none">
-          <div class="d-flex justify-content-between">
-            <strong>Note</strong>
-            <button class="btn-close btn-close-white btn-sm"
-                    onclick="toggleNote(${job.id})"></button>
-          </div>
-          <p class="mb-0">${job.notes}</p>
-        </div>
-      ` : ''}
-    `;
-    document.getElementById('jobList').prepend(li);
-    form.reset();
-    bootstrap.Modal.getInstance(
-      document.getElementById('jobModal')
-    ).hide();
-  })
-  .catch(console.error);
-});
-</script>
-
 
 
 <script>
-// Helper to build an <input> or <select> or <textarea> from Django form attrs
-function makeField(html) {
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  return wrapper.firstElementChild;
-}
+document.addEventListener('DOMContentLoaded', () => {
+  // Toggle Add Job Modal
+  document.getElementById("openModalBtn").addEventListener("click", () => {
+    document.getElementById("jobModal").classList.remove("hidden");
+  });
+  document.getElementById("closeModalBtn").addEventListener("click", () => {
+    document.getElementById("jobModal").classList.add("hidden");
+  });
 
-document.querySelectorAll('.edit-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const id = btn.dataset.id;
-    fetch(`/job/${id}/detail-json/`)
-      .then(r => r.json())
-      .then(job => {
-        // Build HTML for each field
-        const fields = `
-          <label>Company:</label>
-          <input name="company" class="form-control" value="${job.company}">
-          <label>Position:</label>
-          <input name="position" class="form-control" value="${job.position}">
-          <label>Status:</label>
-          <select name="status" class="form-select">
-            <option value="applied" ${job.status_key=='applied'?'selected':''}>Applied</option>
-            <option value="interview" ${job.status_key=='interview'?'selected':''}>Interview</option>
-            <option value="offer" ${job.status_key=='offer'?'selected':''}>Offer</option>
-            <option value="rejected" ${job.status_key=='rejected'?'selected':''}>Rejected</option>
-          </select>
-          <label>Applied date:</label>
-          <input type="date" name="applied_date" class="form-control" value="${job.applied_date}">
-          <label>Notes:</label>
-          <textarea name="notes" class="form-control">${job.notes}</textarea>
-          <label>Resume:</label>
-          <input type="file" name="resume" class="form-control">
-        `;
-        const container = document.getElementById('editFields');
-        container.innerHTML = fields;
+  // Toggle Edit Modal Close
+  document.getElementById("closeEditBtn").addEventListener("click", () => {
+    document.getElementById("editModal").classList.add("hidden");
+  });
 
-        // set form action
-        const form = document.getElementById('editForm');
-        form.action = `/job/${id}/update-ajax/`;
+  // View Note Toggle
+  window.toggleNote = function(id) {
+    document.getElementById(`note-${id}`).classList.toggle("hidden");
+  }
 
-        // show modal
-        new bootstrap.Modal(document.getElementById('editModal')).show();
-      });
+  // Open Edit Modal + Populate Fields
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      fetch(`/job/${id}/detail-json/`)
+        .then(r => r.json())
+        .then(job => {
+          const fields = `
+            <label class="block text-sm text-white">Company:</label>
+            <input name="company" class="w-full px-3 py-2 rounded bg-gray-800 text-white" value="${job.company}">
+            <label class="block text-sm text-white">Position:</label>
+            <input name="position" class="w-full px-3 py-2 rounded bg-gray-800 text-white" value="${job.position}">
+            <label class="block text-sm text-white">Status:</label>
+            <select name="status" class="w-full px-3 py-2 rounded bg-gray-800 text-white">
+              <option value="applied" ${job.status_key=='applied'?'selected':''}>Applied</option>
+              <option value="interview" ${job.status_key=='interview'?'selected':''}>Interview</option>
+              <option value="offer" ${job.status_key=='offer'?'selected':''}>Offer</option>
+              <option value="rejected" ${job.status_key=='rejected'?'selected':''}>Rejected</option>
+            </select>
+            <label class="block text-sm text-white">Applied Date:</label>
+            <input type="date" name="applied_date" class="w-full px-3 py-2 rounded bg-gray-800 text-white" value="${job.applied_date}">
+            <label class="block text-sm text-white">Notes:</label>
+            <textarea name="notes" class="w-full px-3 py-2 rounded bg-gray-800 text-white">${job.notes}</textarea>
+            <label class="block text-sm text-white">Resume:</label>
+            <input type="file" name="resume" class="w-full px-3 py-2 rounded bg-gray-800 text-white">
+          `;
+          document.getElementById('editFields').innerHTML = fields;
+          document.getElementById('editForm').action = `/job/${id}/update-ajax/`;
+          document.getElementById("editModal").classList.remove("hidden");
+        });
+    });
+  });
+
+  // AJAX Submit for Edit Form
+  document.getElementById('editForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: data
+    })
+    .then(r => r.json())
+    .then(() => location.reload())
+    .catch(err => console.error("Update failed", err));
   });
 });
-
-document.getElementById('editForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const form = e.target;
-  const data = new FormData(form);
-
-  fetch(form.action, {
-    method: 'POST',
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    body: data
-  })
-  .then(r => {
-    if (!r.ok) throw r;
-    return r.json();
-  })
-  .then(job => {
-    // find existing <li> and update its innerHTML (similar to Add)
-    const li = document.querySelector(`.edit-btn[data-id="${job.id}"]`).closest('li');
-    li.querySelector('strong').innerText = `${job.position}`; // etc.
-    // ...update company, status badge, date, notes block, resume link...
-    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-  })
-  .catch(err => console.error('Update failed', err));
-});
 </script>
+{% endblock %}
 
 {% endblock %}
