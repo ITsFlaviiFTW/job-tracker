@@ -80,12 +80,22 @@ def dashboard(request):
 
 @login_required
 def job_list(request):
+    if request.method == 'POST':
+        form = JobApplicationForm(request.POST, request.FILES)
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.user = request.user
+            job.save()
+            messages.success(request, "Job added successfully.")
+            return redirect('job_list')  # Redirect to clear form on reload
+    else:
+        form = JobApplicationForm()
+
     status_filter = request.GET.get('status')
     sort_order    = request.GET.get('sort',  'desc')
     search_query  = request.GET.get('search','')
     page_number   = request.GET.get('page',  1)
 
-    # 🔹 only this user’s jobs
     qs = JobApplication.objects.filter(user=request.user)
 
     if status_filter:
@@ -102,12 +112,9 @@ def job_list(request):
     paginator = Paginator(qs, 10)
     page_obj  = paginator.get_page(page_number)
 
-    # 🔹 pass an empty form into the template
-    form = JobApplicationForm()
-
     return render(request, 'jobtracker/job_list.html', {
         'jobs':          page_obj,
-        'form':          form,              # 🔹
+        'form':          form,
         'status_filter': status_filter,
         'sort_order':    sort_order,
         'search_query':  search_query,
