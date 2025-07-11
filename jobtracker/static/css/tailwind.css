@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  select {
+    @apply bg-gray-900 text-white placeholder-gray-400
+           border border-gray-700 rounded px-3 py-2 w-full
+           focus:ring focus:ring-blue-500;
+  }
+
+  button {
+    @apply bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700;
+  }
+}
