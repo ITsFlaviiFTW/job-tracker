@@ -3,6 +3,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Job Tracker{% endblock %}</title>
   <link href="{% static 'css/output.css' %}" rel="stylesheet">
 </head>
@@ -35,7 +36,7 @@
 </div>
 
 <!-- Main content -->
-<main class="max-w-7xl mx-auto px-4 py-6">
+<main class="container mx-auto px-4 py-6">  
   {% block content %}{% endblock %}
 </main>
 
