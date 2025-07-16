@@ -20,6 +20,22 @@ from datetime import date
 import csv
 import requests
 
+#DEMO imports
+from django.contrib.auth import login as _login, authenticate
+from django.conf import settings 
+
+
+
+#==================DEMO STUFF======================
+def auto_demo_login(view_func):
+    def _wrapped(request, *args, **kwargs):
+        if getattr(settings, 'DEMO_MODE', False) and not request.user.is_authenticated:
+            user = authenticate(request, username='demo', password='demo')
+            _login(request, user)
+        return view_func(request, *args, **kwargs)
+    return _wrapped
+
+
 
 
 def register(request):
@@ -49,7 +65,7 @@ def logout_view(request):
     return redirect('login')
 
 
-
+@auto_demo_login       
 @login_required
 def dashboard(request):
     # only this user’s jobs
@@ -77,7 +93,7 @@ def dashboard(request):
     })
 
 
-
+@auto_demo_login       
 @login_required
 def job_list(request):
     if request.method == 'POST':
@@ -121,6 +137,8 @@ def job_list(request):
         'page_obj':      page_obj,
     })
 
+
+@auto_demo_login       
 @login_required
 def job_create(request):
     if request.method == 'POST':
@@ -148,6 +166,8 @@ def job_create(request):
     else:
         form = JobApplicationForm()
     return render(request, 'jobtracker/job_form.html', {'form': form})
+
+
 
 @login_required
 def job_update(request, pk):
@@ -263,6 +283,7 @@ def export_pdf(request):
 
 
 # Jobs API searcher
+@auto_demo_login       
 @login_required
 def explore_jobs(request):
     jobs = []
@@ -310,5 +331,7 @@ def save_remote_job(request):
         status="Applied"  # or any default status you prefer
     )
     return JsonResponse({"status": "saved", "id": job.id})
+
+
 
 
