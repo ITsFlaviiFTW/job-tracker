@@ -32,6 +32,10 @@ def auto_demo_login(view_func):
         if getattr(settings, 'DEMO_MODE', False) and not request.user.is_authenticated:
             user = authenticate(request, username='demo', password='demo')
             _login(request, user)
+        if getattr(settings, 'DEMO_MODE', False) and not request.user.is_authenticated:
+            user = authenticate(request, username='demo', password='demo')
+            if user is not None:               # ← only log in if we got a real User
+                _login(request, user)
         return view_func(request, *args, **kwargs)
     return _wrapped
 
