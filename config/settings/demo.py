@@ -9,6 +9,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": ":memory:",
+        "NAME": BASE_DIR / "demo.sqlite3",
     }
 }
 
