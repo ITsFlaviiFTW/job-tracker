@@ -2,7 +2,7 @@
 from .base import *
 
 DEBUG = True
-ALLOWED_HOSTS = ["demo.jobtracker.flavstudios.dev"]
+ALLOWED_HOSTS = ["demo-jobtracker.flavstudios.dev"]
 
 # In-memory SQLite resets on each restart
 DATABASES = {
