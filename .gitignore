@@ -142,3 +142,7 @@ poetry.lock
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+# Collected static & uploads
+config/staticfiles/
+config/media/

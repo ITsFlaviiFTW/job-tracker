@@ -137,16 +137,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/opt/jobtracker/config/staticfiles'
+STATIC_ROOT = PROJECT_ROOT / 'config' / 'staticfiles'  # /opt/jobtracker/config/staticfiles
 STATICFILES_DIRS = [ PROJECT_ROOT / 'jobtracker' / 'static' ]
 
 
-STATICFILES_STORAGE = (
-    'whitenoise.storage.CompressedManifestStaticFilesStorage'
-)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
